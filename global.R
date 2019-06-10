@@ -1,0 +1,17 @@
+comunas <- c("America",
+             "Aranjuez",
+             "Belen",
+             "Buenos Aires",
+             "Candelaria",
+             "Castilla",
+             "Doce Octubre",
+             "Guayabal",
+             "Laureles",
+             "Manrique",
+             "Poblado",
+             "Popular",
+             "Robledo",
+             "San Javier",
+             "Santa Cruz",
+             "Villa Hermosa")
+barrios <- shapefile("./Data/Barrios de Medellin/Barrio_Vereda.shp")

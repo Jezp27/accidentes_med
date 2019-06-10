@@ -1,19 +1,29 @@
 library(shiny)
+library(leaflet)
 library(ggplot2)
 
 dataset <- diamonds
 
-fluidPage(
+shinyUI(fluidPage(
+  
+  theme = "bootstrap.css",
 
-  titlePanel("Diamonds Explorer"),
+  #tags$head(rel = "stylesheet", type = "text/css", href = "bootstrap.css"),
+            
+  #titlePanel("Accidentalidad en Medellin"),
+  headerPanel("Accidentalidad en Medellin", "Accidentalidad en Medellin"),
+  #sidebarPanel(),
 
-  sidebarPanel(
+ sidebarPanel(
+   
+   selectInput('_Comuna', 'Seleccione una comuna:', comunas),
+   selectInput('_Barrio', 'Seleccione un barrio:', iconv(barrios@data$NOMBRE,"UTF-8","ISO_8859-1")),
+   
+    sliderInput('_Year', 'Fecha', min=2014, max=2018,
+               value=min(2014, 2018), step=1, round=0),
 
-    sliderInput('sampleSize', 'Sample Size', min=1, max=nrow(dataset),
-                value=min(1000, nrow(dataset)), step=500, round=0),
-
-    selectInput('x', 'X', names(dataset)),
-    selectInput('y', 'Y', names(dataset), names(dataset)[[2]]),
+    #selectInput('x', 'X', names(dataset)),
+    #selectInput('y', 'Y', names(dataset), names(dataset)[[2]]),
     selectInput('color', 'Color', c('None', names(dataset))),
 
     checkboxInput('jitter', 'Jitter'),
@@ -24,6 +34,7 @@ fluidPage(
   ),
 
   mainPanel(
-    plotOutput('plot')
+    leafletOutput("myMap")
+    #plotOutput('plot')
   )
-)
+))
