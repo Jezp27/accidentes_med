@@ -5,8 +5,8 @@ account: predict4
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 972269
-bundleId: 2139958
+bundleId: 2150152
 url: https://predict4.shinyapps.io/accidentes-med/
-when: 1560028769.9088
+when: 1560397001.84001
 asMultiple: FALSE
 asStatic: FALSE

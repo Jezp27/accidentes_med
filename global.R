@@ -1,3 +1,5 @@
+library(raster)
+
 comunas <- c("America",
              "Aranjuez",
              "Belen",
