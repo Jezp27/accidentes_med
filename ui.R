@@ -1,6 +1,7 @@
 library(shiny)
 library(leaflet)
 library(ggplot2)
+library(shinycssloaders)
 library(shinyBS)
 library(shinythemes)
 library(shinyLP)
@@ -8,7 +9,7 @@ library(shinyLP)
 dataset <- diamonds
 
 shinyUI(
-  navbarPage("********************",
+  navbarPage("Predict4",
       #theme = "style.css",
       theme = shinytheme("flatly"),
       #shinythemes::themeSelector(),
@@ -29,28 +30,62 @@ shinyUI(
       tabPanel(
         "Historial",
         #panel_div(class_type = "primary", panel_title = "Criterios",
-         #         content = 
+         #         content =
+        column(width=12, align = "center",
+               tags$h2(
+                 "Obtenga los datos historicos de los accidentes que se han presentado en la ciudad
+                 desde el 2018 hasta el 2019"
+               )),
          sidebarPanel(
-            selectInput('_Comuna', 'Seleccione una comuna:', comunas),
-            selectInput('_Barrio', 'Seleccione un barrio:', iconv(barrios@data$NOMBRE,"UTF-8","ISO_8859-1")),
-            sliderInput('_Year', 'Fecha', min=2014, max=2018, value=min(2014, 2018), step=1, round=0),
-            #selectInput('x', 'X', names(dataset)),
-            #selectInput('y', 'Y', names(dataset), names(dataset)[[2]]),
-            selectInput('color', 'Color', c('None', names(dataset))),
-            checkboxInput('jitter', 'Jitter'),
-            checkboxInput('smooth', 'Smooth'),
-                        
-            selectInput('facet_row', 'Facet Row', c(None='.', names(dataset))),
-            selectInput('facet_col', 'Facet Column', c(None='.', names(dataset)))
-         ), #),
+            
+            fluidRow(
+              panel_div(class = "primary", panel_title = "Ubicacion",
+                  content = 
+                    list(
+                      #tags$p("Seleccione un barrio o columna: "),
+                      helpText("Seleccione una comuna o barrio particular."),
+                      selectInput('_Comuna', 'Comuna:', comunas),
+                      tags$br(),
+                      selectInput('_Barrio', 'Barrio:', iconv(barrios@data$NOMBRE,"UTF-8","ISO_8859-1")))
+                    )
+              ),
+            fluidRow(
+              panel_div(class = "primary", panel_title = "Rango de fechas",
+                   content =
+                     list(
+                        helpText("Seleccione el rango de fechas deseado
+                                  (Valido desde el '2014-01-01' hasta '2018-12-31')"),  
+                          #sliderInput('_Year', 'Fecha', min=2014, max=2018, value=min(2014, 2018), step=1, round=0),
+                        dateRangeInput('_Fecha' , 'Fecha:', min = '2014-01-01',max = '2018-12-31', startview= "decade")
+                          #dateInput('_fecha', 'Seleccine', min= '2014-01-01', max ='2018-12-31')) ),   
+                          #selectInput('color', 'Color', c('None', names(dataset))),
+                          #selectInput('facet_row', 'Facet Row', c(None='.', names(dataset))),
+                          #checkboxInput('jitter', 'Jitter'),
+                          #checkboxInput('smooth', 'Smooth'),
+                          #selectInput('facet_col', 'Facet Column', c(None='.', names(dataset))))
+                      )
+                    )
+              ),
+            column(width = 12, align = "center",
+                   submitButton("Buscar", width = '80%')
+            )
+          ),
          mainPanel(
-            leafletOutput("myMap")
-            #plotOutput('plot')
+            fluidRow(
+              tags$h3("Mapa de la ciudad de Medellin segmentado por barrios", align = "center"),
+              withSpinner(leafletOutput("myMap"), color = "#15a3c6"),
+              tags$br(),
+              panel_div(class_type = "Info", panel_title = "Resultados Historicos",
+                      content = 
+                        list(
+                          tags$canvas()
+                        )
+              )
+            )
          )
       )
     )
-  )
-             
+)        
   
   #fluidPage(
   

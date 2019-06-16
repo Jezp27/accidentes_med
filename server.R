@@ -1,6 +1,7 @@
 library(shiny)
 library(leaflet)
 library(rgdal)
+library(readr)
 library(ggplot2)
 library(raster)
 
@@ -15,6 +16,8 @@ function(input, output) {
   a2014= readOGR("./Data/a2014/Accidentalidad_georreferenciada_2014.shp")
   x2014<- a2014@coords[which(is.na(a2014@data$BARRIO)),]
  
+  #x2<- reactiveValues(input$`_Comuna`)
+  #x3<- reactiveValues(input$`_Year`)
   
   output$myMap <- renderLeaflet({
     m = leaflet(barrios)
@@ -28,6 +31,8 @@ function(input, output) {
     print(m) 
   }) 
 
+ 
+  
   output$plot <- renderPlot({
 
     p <- ggplot(dataset(), aes_string(x=input$x, y=input$y)) + geom_point()
@@ -45,6 +50,7 @@ function(input, output) {
       p <- p + geom_smooth()
 
     print(p)
+
 
   }, height=700)
 
