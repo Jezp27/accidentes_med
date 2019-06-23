@@ -5,10 +5,12 @@ library(shinycssloaders)
 library(shinyBS)
 library(shinythemes)
 library(shinyLP)
+library(shinyjs)
 
 dataset <- diamonds
 
 shinyUI(
+
   navbarPage("Predict4",
       #theme = "style.css",
       theme = shinytheme("flatly"),
@@ -29,6 +31,7 @@ shinyUI(
       ),
       tabPanel(
         "Historial",
+        useShinyjs(),
         #panel_div(class_type = "primary", panel_title = "Criterios",
          #         content =
         column(width=12, align = "center",
@@ -36,6 +39,7 @@ shinyUI(
                  "Obtenga los datos historicos de los accidentes que se han presentado en la ciudad
                  desde el 2018 hasta el 2019"
                )),
+        
          sidebarPanel(
             
             fluidRow(
@@ -43,10 +47,21 @@ shinyUI(
                   content = 
                     list(
                       #tags$p("Seleccione un barrio o columna: "),
-                      helpText("Seleccione una comuna o barrio particular."),
-                      selectInput('_Comuna', 'Comuna:', comunas),
+                      helpText("Seleccione si desea buscar por una comuna o un barrio particular."),
+                      
+                      actionButton("_SelComuna", "Por comuna",  width = '100%' ),
                       tags$br(),
-                      selectInput('_Barrio', 'Barrio:', iconv(barrios@data$NOMBRE,"UTF-8","ISO_8859-1")))
+                      tags$br(),
+                      actionButton("_SelBarrio", "Por barrio",  width = '100%' ),
+                      tags$br(),
+                      tags$br(),
+                      #hidden(
+                        selectInput("_Comuna", 'Comuna:', comunas),
+    
+                     # ),
+                      hidden(
+                        selectInput("_Barrio", 'Barrio:', iconv(barrios@data$NOMBRE,"UTF-8","ISO_8859-1")))
+                      )
                     )
               ),
             fluidRow(
@@ -67,7 +82,8 @@ shinyUI(
                     )
               ),
             column(width = 12, align = "center",
-                   submitButton("Buscar", width = '80%')
+                   #submitButton("Buscar", width = '80%'),
+                   actionButton("_Buscar", "Obtener Historico",  width = '80%' )
             )
           ),
          mainPanel(
