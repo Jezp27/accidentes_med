@@ -7,81 +7,108 @@ library(raster)
 library(shinyjs)
 library(lubridate)
 library(colorspace)
+library(DT)
 
 function(input, output) {
 
-  #dataset <- reactive({
-   # diamonds[sample(nrow(diamonds), input$sampleSize),]
- # })
+  #a2014= readOGR("./Data/a2014/Accidentalidad_georreferenciada_2014.shp")
+  #x2014<- a2014@coords[which(is.na(a2014@data$BARRIO)),]
+  output$titulo <- renderText("Mapa de la ciudad de Medellin segmentado por comunas")
   
-  #dataset <- readOGR(dsn="./Barrio_Vereda.shp",layer="Barrio_Vereda")
-  #dataset <- readOGR(dsn = path.expand("Barrio_Vereda.shp"))
-  a2014= readOGR("./Data/a2014/Accidentalidad_georreferenciada_2014.shp")
-  x2014<- a2014@coords[which(is.na(a2014@data$BARRIO)),]
- 
-  #x2<- reactiveValues(input$`_Comuna`)
-  #x3<- reactiveValues(input$`_Year`)
-  #hide("_Comunas")
-  #hide("_Barrios")
+  output$error1 <- renderText("Por favor ingrese el rango de fechas completo")
+  output$error2 <- renderText("El rango de fechas ingresado es inválido, por favor verifiquelo")
+  #values <- reactiveValues()
+  #values$show <- FALSE
   
- 
   output$myMap <- renderLeaflet({
-    #m = leaflet(barrios)
-    #m = addPolygons(m, color= "blue")
-    #m=addTiles(m)
-    #m=addScaleBar(m)
-    fecha<-mdy("3/3/2011")
-    fecha2<-mdy("3/3/2020")
+    output$descriptionTableC <- NULL
+    output$descriptionTableB <- NULL
+    fecha<-mdy("1/1/2014")
+    fecha2<-mdy("1/1/2015")
+    
     print(paint_date_range_comunas(comunass,fechai = fecha,fechaf = fecha2)) 
   }) 
-  
+
   observeEvent(input$`_SelComuna`, {
-    #cat("Showing", input$`_Comuna`, "rows\n")
     showElement(id = "_Comuna")
     hideElement(id = "_Barrio")
-    #help("show")
-    #hide(input$`_Barrio`)
-    #hide(id = "_Barrio")
+    showElement(id= "_BuscarComunas")
+    hideElement(id= "_BuscarBarrios")
   })
   
   observeEvent(input$`_SelBarrio`, {
-    #cat("Showing", input$`_Comuna`, "rows\n")
     showElement(id = "_Barrio")
     hideElement(id = "_Comuna")
+    
+    hideElement(id= "_BuscarComunas")
+    showElement(id= "_BuscarBarrios")
   })
   
 
-  observeEvent(input$`_Buscar`, {
-    cat("fecha", input$`_Fecha`)
-    cat("Showing", input$`_Comuna`, "rows\n")
-    output$myMap <- renderLeaflet({
+  observeEvent(input$`_BuscarComunas`, {
+    if(is.na(input$`_Fecha`[1]) || is.na(input$`_Fecha`[2])){
+      showElement("msgError1")
+    }else if(input$`_Fecha`[1] > input$`_Fecha`[2]){
+      showElement("msgError2")
+    }else{
+      hideElement("msgError1")
+      hideElement("msgError2")
+      showElement("resultadosTitulo")
+      output$titulo <- renderText("Mapa de la ciudad de Medellin segmentado por comunas")
+      output$resultado <- renderText({
+        paste("Resultados para la comuna ", input$`_Comuna`, "en el rango de fechas", input$`_Fecha`[1], " y ",
+              input$`_Fecha`[2])})
+      output$myMap <- renderLeaflet({
+        fecha<-ymd(input$`_Fecha`[1])
+        fecha2<-ymd(input$`_Fecha`[2])
+        #fecha<-mdy("3/3/2014")
+        #fecha2<-mdy("3/3/2015")
+        print(paint_date_range_comunas(comunass,fechai = fecha,fechaf = fecha2)) 
+      })
+      
+      output$descriptionTableC <- DT::renderDataTable({
+        DT::datatable(c, options = list(lengthMenu = c(5, 30, 50), pageLength = 30))
+      })
+      
+      shinyjs::show("descriptionTableC")
+      shinyjs::hide("descriptionTableB")
+    }
+  })
 
-      fecha<-mdy("3/3/2014")
-      fecha2<-mdy("3/3/2015")
-      print(paint_date_range_comunas(comunass,fechai = fecha,fechaf = fecha2)) 
-    })
+  observeEvent(input$`_BuscarBarrios`, {
+    if(is.na(input$`_Fecha`[1]) || is.na(input$`_Fecha`[2])){
+      showElement("msgError1")
+      hideElement("msgError2")
+    }else if(input$`_Fecha`[1] > input$`_Fecha`[2]){
+      showElement("msgError2")
+      hideElement("msgError1")
+    }else{
+      hideElement("msgError1")
+      hideElement("msgError2")
+      showElement("resultadosTitulo")
+      output$titulo <- renderText("Mapa de la ciudad de Medellin segmentado por barrios")
+      output$resultado <- renderText({
+        paste("Resultados para el barrio ", input$`_Barrio`, "en el rango de fechas", input$`_Fecha`[1], " y ",
+              input$`_Fecha`[2])})
+      output$myMap <- renderLeaflet({
+        fecha<-ymd(input$`_Fecha`[1])
+        fecha2<-ymd(input$`_Fecha`[2])
+        #fecha<-mdy("3/3/2014")
+        #fecha2<-mdy("3/3/2015")
+        print(paint_date_range_comunas(comunass,fechai = fecha,fechaf = fecha2)) 
+      })
+      output$descriptionTableB <- DT::renderDataTable({
+        DT::datatable(b, options = list(lengthMenu = c(5, 30, 50), pageLength = 30))
+      })
+  
+      shinyjs::hide("descriptionTableC")
+      shinyjs::show("descriptionTableB")
+    }
   })
   
-  output$plot <- renderPlot({
-
-    p <- ggplot(dataset(), aes_string(x=input$x, y=input$y)) + geom_point()
-
-    if (input$color != 'None')
-      p <- p + aes_string(color=input$color)
-
-    facets <- paste(input$facet_row, '~', input$facet_col)
-    if (facets != '. ~ .')
-      p <- p + facet_grid(facets)
-
-    if (input$jitter)
-      p <- p + geom_jitter()
-    if (input$smooth)
-      p <- p + geom_smooth()
-
-    print(p)
-
-
-  }, height=700)
+  observeEvent(input$`_Fecha`,{
+    hideElement("resultadosTitulo")
+  })
 
   paint_date_range_comunas<-function(data,fechai,fechaf){
     #filtrado de la data por fechas
@@ -92,8 +119,6 @@ function(input, output) {
     com<-NA
     coms<-iconv(data$NOMBRE, "UTF-8","ISO_8859-1")
     
-
-
     #genero la suma de los accidentes en las fechas indicadas
     for (com in coms) {
       summa[com]<-sum((subset(graphdata,graphdata$COMUNA==com))$Freq)
@@ -105,9 +130,10 @@ function(input, output) {
     color=sequential_hcl(length(summa),palette = "Heat")[rank(1/summa)]
     #Empieza el mapeado
     m=leaflet(comunass)
+    help("leaflet")
     #se agregan lo poligonos de las comunas
     m=addPolygons(m,fillOpacity =0.5,color =color, opacity = 1,
-                  popup = summa)
+                  popup = paste(iconv(comunass$NOMBRE,"UTF-8","ISO_8859-1"),summa))
     m=addTiles(m,options = tileOptions(minZoom=11, maxZoom=14))
     #Se agrega la marca de la escala del mapa, opcional
     m=addScaleBar(m)
@@ -119,6 +145,5 @@ function(input, output) {
     a<-subset(data,(mdy(data$FECHA))>=fechai)
     return(subset(a,(mdy(a$FECHA))<=fechaf))
   }
-  
 }
 

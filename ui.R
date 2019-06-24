@@ -6,8 +6,7 @@ library(shinyBS)
 library(shinythemes)
 library(shinyLP)
 library(shinyjs)
-
-dataset <- diamonds
+library(DT)
 
 shinyUI(
 
@@ -37,17 +36,18 @@ shinyUI(
         column(width=12, align = "center",
                tags$h2(
                  "Obtenga los datos historicos de los accidentes que se han presentado en la ciudad
-                 desde el 2018 hasta el 2019"
+                 desde el 2014 hasta el 2018"
                )),
         
          sidebarPanel(
-            
+           
             fluidRow(
               panel_div(class = "primary", panel_title = "Ubicacion",
                   content = 
                     list(
-                      #tags$p("Seleccione un barrio o columna: "),
-                      helpText("Seleccione si desea buscar por una comuna o un barrio particular."),
+                      helpText(class="text-info", 
+                               "Seleccione si desea buscar por una comuna o un barrio particular.",
+                               align = "center"),
                       
                       actionButton("_SelComuna", "Por comuna",  width = '100%' ),
                       tags$br(),
@@ -55,10 +55,7 @@ shinyUI(
                       actionButton("_SelBarrio", "Por barrio",  width = '100%' ),
                       tags$br(),
                       tags$br(),
-                      #hidden(
-                        selectInput("_Comuna", 'Comuna:', comunas),
-    
-                     # ),
+                      selectInput("_Comuna", 'Comuna:', iconv(comunass$NOMBRE,"UTF-8","ISO_8859-1")),
                       hidden(
                         selectInput("_Barrio", 'Barrio:', iconv(barrios@data$NOMBRE,"UTF-8","ISO_8859-1")))
                       )
@@ -68,10 +65,26 @@ shinyUI(
               panel_div(class = "primary", panel_title = "Rango de fechas",
                    content =
                      list(
-                        helpText("Seleccione el rango de fechas deseado
-                                  (Valido desde el '2014-01-01' hasta '2018-12-31')"),  
-                          #sliderInput('_Year', 'Fecha', min=2014, max=2018, value=min(2014, 2018), step=1, round=0),
-                        dateRangeInput('_Fecha' , 'Fecha:', min = '2014-01-01',max = '2018-12-31', startview= "decade")
+                        helpText(class="text-info", "Seleccione el rango de fechas deseado
+                                  (Valido desde el '2014-01-01' hasta '2018-12-31')",
+                                 align = "center"),  
+                        dateRangeInput('_Fecha' , 'Fecha:', min = '2014-01-01',max = '2018-12-31', startview= "decade",
+                                       language = "es", separator = " - ", format = "mm/dd/yyyy"),
+                        hidden(tags$div(
+                                  id = "msgError1", 
+                                  class="text-danger", 
+                                  tags$h5(textOutput("error1"), 
+                                          align = "center")
+                               )
+                        ),
+                        hidden(tags$div(
+                                  id = "msgError2", 
+                                  class="text-danger", 
+                                  tags$h5(textOutput("error2"), 
+                                          align = "center")
+                                )
+                        )
+                        
                           #dateInput('_fecha', 'Seleccine', min= '2014-01-01', max ='2018-12-31')) ),   
                           #selectInput('color', 'Color', c('None', names(dataset))),
                           #selectInput('facet_row', 'Facet Row', c(None='.', names(dataset))),
@@ -81,33 +94,56 @@ shinyUI(
                       )
                     )
               ),
+            fluidRow(
+              panel_div(class = "primary", panel_title = "Escala",
+                        content = 
+                          list(
+                          helpText(class="text-info",
+                                   "Seleccione la escala de tiempo que desea usar para visualizar los resultados",
+                                   align = "center"),
+                          radioButtons('_escala', '',
+                              choiceNames = list("Día", "Semana", "Mes"),
+                              choiceValues =  list("dia", "semana", "mes")))
+                        
+              )
+            ),
+            
+            helpText(class="text-warning", "**Todos los campos son obligatorios", align = "center"),
             column(width = 12, align = "center",
                    #submitButton("Buscar", width = '80%'),
-                   actionButton("_Buscar", "Obtener Historico",  width = '80%' )
+                   actionButton("_BuscarComunas", "Obtener Historico",  width = '80%' ),
+                   hidden(
+                     actionButton("_BuscarBarrios", "Obtener Historico",  width = '80%' )
+                   )
             )
           ),
          mainPanel(
             fluidRow(
-              tags$h3("Mapa de la ciudad de Medellin segmentado por barrios", align = "center"),
+              tags$h3(textOutput("titulo"), align = "center"),
               withSpinner(leafletOutput("myMap"), color = "#15a3c6"),
               tags$br(),
-              panel_div(class_type = "Info", panel_title = "Resultados Historicos",
+              panel_div(class_type = "Info", panel_title = "",
                       content = 
                         list(
-                          tags$canvas()
+                          hidden(tags$div(
+                            id = "resultadosTitulo", 
+                            class="text-primary", 
+                            tags$h3(textOutput("resultado")), 
+                                    align = "center")
+                          ),
+                          tags$br(),
+                          withSpinner(DT::dataTableOutput("descriptionTableC"), color = "#15a3c6"),
+                          withSpinner(DT::dataTableOutput("descriptionTableB"), color = "#15a3c6")
                         )
               )
             )
          )
+      ),
+      tabPanel(
+        "Prediccion"
       )
     )
 )        
-  
-  #fluidPage(
-  
-
-
-  #tags$head(rel = "stylesheet", type = "text/css", href = "bootstrap.css"),
 
  
   

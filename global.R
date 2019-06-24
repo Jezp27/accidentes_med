@@ -30,6 +30,7 @@ nb<-as.data.frame(table(b$BARRIO))
 nc<-as.data.frame(table(c$COMUNA))
 nc<-nc$Var1
 nb<-nb$Var1
-show(nc)
 barrioss<-subset(barriosOGR,(iconv(barriosOGR$NOMBRE,"UTF-8","ISO_8859-1") %in% nb))
 comunass<-subset(comunasOGR,(iconv(comunasOGR$NOMBRE,"UTF-8","ISO_8859-1") %in% nc))
+
+
