@@ -23,8 +23,8 @@ comunas <- c("America",
 barriosOGR=readOGR("./Data/Barrios de Medellin/Barrio_Vereda.shp")
 comunasOGR=readOGR("./Data/Comunas/Limite_Comuna_Corregimiento.shp")
 
-b<-read.csv("Fbarrios.csv")
-c<-read.csv("./Fcomunas.csv")
+b<-read.csv("Fbarrios1.csv")
+c<-read.csv("./Fcomunas1.csv")
 
 nb<-as.data.frame(table(b$BARRIO))
 nc<-as.data.frame(table(c$COMUNA))

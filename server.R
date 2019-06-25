@@ -54,7 +54,8 @@ function(input, output) {
       hideElement("msgError2")
       showElement("resultadosTitulo")
       
-      output$titulo <- renderText("Mapa de la ciudad de Medellin segmentado por comunas")
+      output$titulo <- renderText(paste("Mapa de la ciudad de Medellin segmentado por comunas en el rango de fechas",
+                                  input$`_Fecha`[1], " y ",  input$`_Fecha`[2]))
       output$resultado <- renderText({
         paste("Resultados para la comuna ", input$`_Comuna`, "en el rango de fechas", input$`_Fecha`[1], " y ",
               input$`_Fecha`[2])})
@@ -71,15 +72,15 @@ function(input, output) {
         DT::datatable( c, options = list(lengthMenu = c(5, 30, 50), pageLength = 30))
       })
       
-      #output$descriptionTableC <- DT::renderDataTable({
-       # if (input$`_escala` == "dia"){
-        #  DT::datatable(get_freq_com_dia(c, nombre=nombreC,fechai=fecha,fechaf = fecha2), options = list(lengthMenu = c(5, 30, 50), pageLength = 30))
-        #}else if (input$`_escala` == "semana"){
-         # DT::datatable(get_freq_com_semana(c, nombre=nombreC,fechai=fecha,fechaf = fecha2), options = list(lengthMenu = c(5, 30, 50), pageLength = 30))
-        #}else{
-        #  DT::datatable(get_freq_com_mes(c, nombre=nombreC,fechai=fecha,fechaf = fecha2), options = list(lengthMenu = c(5, 30, 50), pageLength = 30))
-        #}
-      #})
+      output$descriptionTableC <- DT::renderDataTable({
+       if (input$`_escala` == "dia"){
+          DT::datatable(get_freq_com_dia(c, nombre=nombreC,fechai=fecha,fechaf = fecha2), options = list(lengthMenu = c(5, 30, 50), pageLength = 30))
+        }else if (input$`_escala` == "semana"){
+          DT::datatable(get_freq_com_semana(c, nombre=nombreC,fechai=fecha,fechaf = fecha2), options = list(lengthMenu = c(5, 30, 50), pageLength = 30))
+        }else{
+          DT::datatable(get_freq_com_mes(c, nombre=nombreC,fechai=fecha,fechaf = fecha2), options = list(lengthMenu = c(5, 30, 50), pageLength = 30))
+        }
+      })
       
       shinyjs::show("descriptionTableC")
       shinyjs::hide("descriptionTableB")
@@ -98,7 +99,8 @@ function(input, output) {
       hideElement("msgError2")
       showElement("resultadosTitulo")
       
-      output$titulo <- renderText("Mapa de la ciudad de Medellin segmentado por barrios")
+      output$titulo <- renderText(paste("Mapa de la ciudad de Medellin segmentado por barrios en el rango de fechas",
+                                        input$`_Fecha`[1], " y ",  input$`_Fecha`[2]))
       output$resultado <- renderText({
         paste("Resultados para el barrio ", input$`_Barrio`, "en el rango de fechas", input$`_Fecha`[1], " y ",
               input$`_Fecha`[2])})
@@ -115,15 +117,15 @@ function(input, output) {
         DT::datatable( b, options = list(lengthMenu = c(5, 30, 50), pageLength = 30))
       })
       
-      #output$descriptionTableB <- DT::renderDataTable({
-       # if (input$`_escala` == "dia"){
-        #  DT::datatable(get_freq_bar_dia(b, nombre=nombreB,fechai=fecha,fechaf = fecha2), options = list(lengthMenu = c(5, 30, 50), pageLength = 30))
-        #}else if (input$`_escala` == "semana"){
-         # DT::datatable(get_freq_bar_semana(b, nombre=nombreB,fechai=fecha,fechaf = fecha2), options = list(lengthMenu = c(5, 30, 50), pageLength = 30))
-        #}else{
-        #  DT::datatable(get_freq_bar_mes(b, nombre=nombreB,fechai=fecha,fechaf = fecha2), options = list(lengthMenu = c(5, 30, 50), pageLength = 30))
-        #}
-      #})
+      output$descriptionTableB <- DT::renderDataTable({
+        if (input$`_escala` == "dia"){
+          DT::datatable(get_freq_bar_dia(b, nombre=nombreB,fechai=fecha,fechaf = fecha2), options = list(lengthMenu = c(5, 30, 50), pageLength = 30))
+        }else if (input$`_escala` == "semana"){
+          DT::datatable(get_freq_bar_semana(b, nombre=nombreB,fechai=fecha,fechaf = fecha2), options = list(lengthMenu = c(5, 30, 50), pageLength = 30))
+        }else{
+          DT::datatable(get_freq_bar_mes(b, nombre=nombreB,fechai=fecha,fechaf = fecha2), options = list(lengthMenu = c(5, 30, 50), pageLength = 30))
+        }
+      })
   
       shinyjs::hide("descriptionTableC")
       shinyjs::show("descriptionTableB")
@@ -131,7 +133,19 @@ function(input, output) {
   })
   
   observeEvent(input$`_Fecha`,{
-    hideElement("resultadosTitulo")
+    
+    if(is.na(input$`_Fecha`[1]) || is.na(input$`_Fecha`[2])){
+      showElement("msgError1")
+      hideElement("msgError2")
+    }else if(input$`_Fecha`[1] > input$`_Fecha`[2]){
+      showElement("msgError2")
+      hideElement("msgError1")
+    }else{
+      hideElement("msgError1")
+      hideElement("msgError2")
+      showElement("resultadosTitulo")}
+      
+    #hideElement("resultadosTitulo")
   })
   
 ############################################################################################3
@@ -203,70 +217,70 @@ function(input, output) {
   
 ################################################################################################
   ###Devuelve el dataframe a mostrar en la pag de un barrio por días
-  #get_freq_bar_dia<-function(data,nombre="",fechai=mdy("1/1/2012"),fechaf=mdy("1/1/2020")){
-   # bardata<-subset(data,data$BARRIO==nombre)
-    #inter<-interval(fechai,fechaf)
-    #bardata<-subset(bardata,mdy(bardata$FECHA) %within% inter)
-    #nocolumnas<-c("X","SEMANA","AÑO","BARRIO","FESTIVO","MES")
-    #bardata<-bardata[ , !names(bardata) %in% nocolumnas]
-    #names(bardata)[2]<-"DIA"
-    #names(bardata)[3]<-"NUMERO DE ACCIDENTES"
-    #return(bardata)
-  #}
+  get_freq_bar_dia<-function(data,nombre="",fechai=mdy("1/1/2012"),fechaf=mdy("1/1/2020")){
+    bardata<-subset(data,data$BARRIO==nombre)
+    inter<-interval(fechai,fechaf)
+    bardata<-subset(bardata,mdy(bardata$FECHA) %within% inter)
+    nocolumnas<-c("X","SEMANA","ANIO","BARRIO","FESTIVO","MES")
+    bardata<-bardata[ , !names(bardata) %in% nocolumnas]
+    names(bardata)[2]<-"DIA"
+    names(bardata)[3]<-"NUMERO DE ACCIDENTES"
+    return(bardata)
+  }
   
   ##Devuelve el dataframe a mostrar en la pag de un barrio por semanas
-  #get_freq_bar_semana<-function(data,nombre="",fechai=mdy("1/1/2012"),fechaf=mdy("1/1/2020")){
-   # bardata<-subset(data,data$BARRIO==nombre)
-    #inter<-interval(fechai,fechaf)
-    #bardata<-subset(bardata,mdy(bardata$FECHA) %within% inter)
-    #semanas<-aggregate(Freq ~ (SEMANA+AÑO) , data=bardata, FUN=sum)
-    #names(semanas)[3]<-"NUMERO DE ACCIDENTES"
-    #return(semanas)
-  #}
+  get_freq_bar_semana<-function(data,nombre="",fechai=mdy("1/1/2012"),fechaf=mdy("1/1/2020")){
+    bardata<-subset(data,data$BARRIO==nombre)
+    inter<-interval(fechai,fechaf)
+    bardata<-subset(bardata,mdy(bardata$FECHA) %within% inter)
+    semanas<-aggregate(Freq ~ (SEMANA+ANIO) , data=bardata, FUN=sum)
+    names(semanas)[3]<-"NUMERO DE ACCIDENTES"
+    return(semanas)
+  }
   
   ##Devuelve el dataframe a mostrar en la pag de un barrio por meses
-  #get_freq_bar_mes<-function(data,nombre="",fechai=mdy("1/1/2012"),fechaf=mdy("1/1/2020")){
-   # bardata<-subset(data,data$BARRIO==nombre)
-    #day(fechai)<-1
-    #day(fechaf)<-(days_in_month(fechaf))
-    #inter<-interval(fechai,fechaf)
-    #bardata<-subset(bardata,mdy(bardata$FECHA) %within% inter)
-    #pormes<-aggregate(Freq ~ (MES+AÑO) , data=bardata, FUN=sum)
-    #names(pormes)[3]<-"NUMERO DE ACCIDENTES"
-    #return(pormes)
-  #}
+  get_freq_bar_mes<-function(data,nombre="",fechai=mdy("1/1/2012"),fechaf=mdy("1/1/2020")){
+    bardata<-subset(data,data$BARRIO==nombre)
+    day(fechai)<-1
+    day(fechaf)<-(days_in_month(fechaf))
+    inter<-interval(fechai,fechaf)
+    bardata<-subset(bardata,mdy(bardata$FECHA) %within% inter)
+    pormes<-aggregate(Freq ~ (MES+ANIO) , data=bardata, FUN=sum)
+    names(pormes)[3]<-"NUMERO DE ACCIDENTES"
+    return(pormes)
+  }
 ################################################################################################ 
   
   ###Devuelve el dataframe a mostrar en la pag de una comuna por días
-  #get_freq_com_dia<-function(data,nombre="",fechai=mdy("1/1/2012"),fechaf=mdy("1/1/2020")){
-   # comdata<-subset(data,data$COMUNA==nombre)
-    #inter<-interval(fechai,fechaf)
-    #comdata<-subset(comdata,mdy(comdata$FECHA) %within% inter)
-    #nocolumnas<-c("X","SEMANA","AÑO","COMUNA","FESTIVO","MES")
-    #comdata<-comdata[ , !names(comdata) %in% nocolumnas]
-    #names(comdata)[2]<-"DIA"
-    #names(comdata)[3]<-"NUMERO DE ACCIDENTES"
-    #return(comdata)
-  #}
+  get_freq_com_dia<-function(data,nombre="",fechai=mdy("1/1/2012"),fechaf=mdy("1/1/2020")){
+    comdata<-subset(data,data$COMUNA==nombre)
+    inter<-interval(fechai,fechaf)
+    comdata<-subset(comdata,mdy(comdata$FECHA) %within% inter)
+    nocolumnas<-c("X","SEMANA","ANIO","COMUNA","FESTIVO","MES")
+    comdata<-comdata[ , !names(comdata) %in% nocolumnas]
+    names(comdata)[2]<-"DIA"
+    names(comdata)[3]<-"NUMERO DE ACCIDENTES"
+    return(comdata)
+  }
   
-  #get_freq_com_semana<-function(data,nombre="",fechai=mdy("1/1/2012"),fechaf=mdy("1/1/2020")){
-   # comdata<-subset(data,data$COMUNA==nombre)
-    #inter<-interval(fechai,fechaf)
-    #comdata<-subset(comdata,mdy(comdata$FECHA) %within% inter)
-    #semanas<-aggregate(Freq ~ (SEMANA+AÑO) , data=comdata, FUN=sum)
-    #names(semanas)[3]<-"NUMERO DE ACCIDENTES"
-    #return(semanas)
-  #}
+  get_freq_com_semana<-function(data,nombre="",fechai=mdy("1/1/2012"),fechaf=mdy("1/1/2020")){
+   comdata<-subset(data,data$COMUNA==nombre)
+   inter<-interval(fechai,fechaf)
+   comdata<-subset(comdata,mdy(comdata$FECHA) %within% inter)
+   semanas<-aggregate(Freq ~ (SEMANA+ANIO) , data=comdata, FUN=sum)
+   names(semanas)[3]<-"NUMERO DE ACCIDENTES"
+   return(semanas)
+  }
   
-  #get_freq_com_mes<-function(data,nombre="",fechai=mdy("1/1/2012"),fechaf=mdy("1/1/2020")){
-   # comdata<-subset(data,data$COMUNA==nombre)
-    #day(fechai)<-1
-    #day(fechaf)<-(days_in_month(fechaf))
-    #inter<-interval(fechai,fechaf)
-    #comdata<-subset(comdata,mdy(comdata$FECHA) %within% inter)
-    #pormes<-aggregate(Freq ~ (MES+AÑO) , data=comdata, FUN=sum)
-    #names(pormes)[3]<-"NUMERO DE ACCIDENTES"
-    #return(pormes)
-  #}
+  get_freq_com_mes<-function(data,nombre="",fechai=mdy("1/1/2012"),fechaf=mdy("1/1/2020")){
+    comdata<-subset(data,data$COMUNA==nombre)
+    day(fechai)<-1
+    day(fechaf)<-(days_in_month(fechaf))
+    inter<-interval(fechai,fechaf)
+    comdata<-subset(comdata,mdy(comdata$FECHA) %within% inter)
+    pormes<-aggregate(Freq ~ (MES+ANIO) , data=comdata, FUN=sum)
+    names(pormes)[3]<-"NUMERO DE ACCIDENTES"
+    return(pormes)
+  }
 }
 

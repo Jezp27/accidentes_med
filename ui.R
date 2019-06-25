@@ -15,11 +15,19 @@ shinyUI(
       #theme = "style.css",
       theme = shinytheme("flatly"),
       #shinythemes::themeSelector(),
+      
       tabPanel(
         "Inicio",
         
         jumbotron("Accidentalidad en Medellin", "Historial y Prediccion", button = FALSE),
         
+        fluidRow(
+          column( width=12,
+                  tags$div(class="logoWrapper",
+                           align= "center",
+                           HTML('<img src="inicio.png" alt="inicio">')
+                  )
+          )),
         sidebarLayout(
           sidebarPanel(
                           
