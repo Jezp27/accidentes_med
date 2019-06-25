@@ -6,6 +6,7 @@ library(shinyBS)
 library(shinythemes)
 library(shinyLP)
 library(shinyjs)
+library(colorspace)
 library(DT)
 
 shinyUI(
@@ -55,9 +56,9 @@ shinyUI(
                       actionButton("_SelBarrio", "Por barrio",  width = '100%' ),
                       tags$br(),
                       tags$br(),
-                      selectInput("_Comuna", 'Comuna:', iconv(comunass$NOMBRE,"UTF-8","ISO_8859-1")),
+                      selectInput("_Comuna", 'Comuna:', comunass$NOMBRE),
                       hidden(
-                        selectInput("_Barrio", 'Barrio:', iconv(barrios@data$NOMBRE,"UTF-8","ISO_8859-1")))
+                        selectInput("_Barrio", 'Barrio:', barrioss$NOMBRE))
                       )
                     )
               ),
