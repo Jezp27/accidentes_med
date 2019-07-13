@@ -46,7 +46,10 @@ shinyUI(
                tags$h2(
                  "Obtenga los datos historicos de los accidentes que se han presentado en la ciudad
                  desde el 2014 hasta el 2018"
-               )),
+               ),
+               tags$br(),
+               tags$br()
+        ),
         
          sidebarPanel(
            
@@ -93,13 +96,6 @@ shinyUI(
                                           align = "center")
                                 )
                         )
-                        
-                          #dateInput('_fecha', 'Seleccine', min= '2014-01-01', max ='2018-12-31')) ),   
-                          #selectInput('color', 'Color', c('None', names(dataset))),
-                          #selectInput('facet_row', 'Facet Row', c(None='.', names(dataset))),
-                          #checkboxInput('jitter', 'Jitter'),
-                          #checkboxInput('smooth', 'Smooth'),
-                          #selectInput('facet_col', 'Facet Column', c(None='.', names(dataset))))
                       )
                     )
               ),
@@ -111,7 +107,7 @@ shinyUI(
                                    "Seleccione la escala de tiempo que desea usar para visualizar los resultados",
                                    align = "center"),
                           radioButtons('_escala', '',
-                              choiceNames = list("Día", "Semana", "Mes"),
+                              choiceNames = list("DÃ­a", "Semana", "Mes"),
                               choiceValues =  list("dia", "semana", "mes")))
                         
               )
@@ -149,7 +145,119 @@ shinyUI(
          )
       ),
       tabPanel(
-        "Prediccion"
+        "Prediccion",
+        column(width=12, align = "center",
+               tags$h2(
+                 "Obtenga informacion sobre la cantidad probable de accidentes que ocurriran en el futuro"
+               ),
+               tags$br(),
+               tags$br()
+        ),
+        fluidRow(
+          column(width = 4, align = "center",
+              panel_div(class = "primary", panel_title = "Ubicacion",
+                           content = 
+                             list(
+                               helpText(class="text-info", 
+                                        "Seleccione si desea buscar por una comuna o un barrio particular.",
+                                        align = "center"),
+                               actionButton("pred_SelComuna", "Por comuna",  width = '100%' ),
+                               tags$br(),
+                               tags$br(),
+                               actionButton("pred_SelBarrio", "Por barrio",  width = '100%' ),
+                               tags$br(),
+                               tags$br(),
+                               selectInput("pred_Comuna", 'Comuna:', comunass$NOMBRE),
+                               hidden(
+                                 selectInput("pred_Barrio", 'Barrio:', barrioss$NOMBRE))
+                            )
+              )
+          ),
+          column(width = 4, align = "center", 
+              panel_div(class = "primary", panel_title = "Rango de fechas",
+                           content =
+                             list(
+                               helpText(class="text-info", 
+                                        "Seleccione el rango de fechas deseado",
+                                        align = "center"),  
+                               tags$br(),
+                               tags$br(),
+                               tags$br(),
+                               dateRangeInput('pred_Fecha' , 'Fecha:', min = '2014-01-01',max = '2018-12-31', startview= "decade",
+                                              language = "es", separator = " - ", format = "mm/dd/yyyy"),
+                               tags$br(),
+                               tags$br(),
+                               tags$br(),
+                               hidden(
+                                 tags$div(
+                                   id = "pred_MsgError1",
+                                   class="text-danger",
+                                   tags$h5(textOutput("pred_Error1"),
+                                           align = "center")
+                                )
+                               ),
+                               hidden(
+                                 tags$div(
+                                   id = "pred_MsgError2",
+                                   class="text-danger",
+                                   tags$h5(textOutput("pred_Error2"),
+                                           align = "center")
+                                )
+                               )
+                             )
+                 )       
+          ),
+          column(width = 4, align = "center", 
+               panel_div(class = "primary", panel_title = "Escala",
+                           content = 
+                             list(
+                               helpText(class="text-info",
+                                        "Seleccione la escala de tiempo que desea usar para visualizar los resultados",
+                                        align = "center"),
+                               tags$br(),
+                               tags$br(),
+                               tags$div(
+                                 align = "left",
+                                 radioButtons('pred_Escala', '', 
+                                            choiceNames = list("Dia", "Semana", "Mes"),
+                                            choiceValues =  list("dia", "semana", "mes"))
+                               ),
+                               tags$br(),
+                               tags$br(),
+                               tags$br()
+                              )
+                 )       
+          )
+        ),
+        fluidRow(
+          column(width=4, align = "center",  
+                 helpText(class="text-warning", 
+                          "**Todos los campos son obligatorios", align = "center")
+          ),
+          column(width=4, align = "center",
+                 actionButton("pred_BuscarComunas", "Obtener Prediccion",  width = '80%' ),
+                 hidden(
+                   actionButton("pred_BuscarBarrios", "Obtener Prediccion",  width = '80%' )
+                 )
+          ),
+          column(width=4, align = "center", "")
+        ),
+        fluidRow(
+          panel_div(class_type = "Info", panel_title = "",
+                    content = 
+                      list(
+                        hidden(tags$div(
+                          id = "resultadosPrediccion", 
+                          class="text-primary", 
+                          tags$h3(textOutput("resultadoPred")), 
+                          align = "center")
+                        ),
+                        tags$br(),
+                        withSpinner(DT::dataTableOutput("prediccionTableC"), color = "#15a3c6"),
+                        withSpinner(DT::dataTableOutput("prediccionTableB"), color = "#15a3c6")
+                      )
+          )
+        )
       )
     )
 )        

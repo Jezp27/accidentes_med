@@ -16,9 +16,7 @@ function(input, output) {
   
   output$error1 <- renderText("Por favor ingrese el rango de fechas completo")
   output$error2 <- renderText("El rango de fechas ingresado es inválido, por favor verifíquelo")
-  #values <- reactiveValues()
-  #values$show <- FALSE
-  
+
   output$myMap <- renderLeaflet({
     output$descriptionTableC <- NULL
     output$descriptionTableB <- NULL
@@ -43,7 +41,6 @@ function(input, output) {
     showElement(id= "_BuscarBarrios")
   })
   
-
   observeEvent(input$`_BuscarComunas`, {
     if(is.na(input$`_Fecha`[1]) || is.na(input$`_Fecha`[2])){
       showElement("msgError1")
@@ -133,7 +130,6 @@ function(input, output) {
   })
   
   observeEvent(input$`_Fecha`,{
-    
     if(is.na(input$`_Fecha`[1]) || is.na(input$`_Fecha`[2])){
       showElement("msgError1")
       hideElement("msgError2")
@@ -282,5 +278,118 @@ function(input, output) {
     names(pormes)[3]<-"NUMERO DE ACCIDENTES"
     return(pormes)
   }
+  
+################################## # PREDICCION # ###############################################
+  output$pred_Error1 <- renderText("Por favor ingrese el rango de fechas completo")
+  output$pred_Error2 <- renderText("El rango de fechas ingresado es inválido, por favor verifíquelo")
+  output$prediccionTableC <- NULL
+  output$prediccionTableB <- NULL 
+  
+  observeEvent(input$`pred_SelComuna`, {
+    shinyjs::show(id = "pred_Comuna")
+    shinyjs::hide(id = "pred_Barrio")
+    
+    showElement(id= "pred_BuscarComunas")
+    hideElement(id= "pred_BuscarBarrios")
+  })
+  
+  observeEvent(input$`pred_SelBarrio`, {
+    shinyjs::show(id = "pred_Barrio")
+    shinyjs::hide(id = "pred_Comuna")
+    
+    hideElement(id= "pred_BuscarComunas")
+    showElement(id= "pred_BuscarBarrios")
+  })
+  
+  observeEvent(input$`pred_BuscarComunas`, {
+    if(is.na(input$`pred_Fecha`[1]) || is.na(input$`pred_Fecha`[2])){
+      showElement("pred_MsgError1")
+    }else if(input$`pred_Fecha`[1] > input$`pred_Fecha`[2]){
+      showElement("pred_MsgError2")
+    }else{
+      hideElement("pred_MsgError1")
+      hideElement("pred_MsgError2")
+      showElement("resultadosPrediccion")
+      
+      fecha<-ymd(input$`pred_Fecha`[1])
+      fecha2<-ymd(input$`pred_Fecha`[2])
+      nombreC <- input$`pred_Comuna`
+      
+      output$resultadoPred <- renderText({
+        paste("Resultados para la comuna ", nombreC, "en el rango de fechas", fecha, " y ",
+              fecha2)})
+      
+      output$prediccionTableC <- DT::renderDataTable({
+        DT::datatable( c, options = list(lengthMenu = c(5, 30, 50), pageLength = 30))
+      })
+      
+      output$prediccionTableC <- DT::renderDataTable({
+        if (input$`pred_Escala` == "dia"){
+          DT::datatable(get_freq_com_dia(c, nombre=nombreC,fechai=fecha,fechaf = fecha2), options = list(lengthMenu = c(5, 30, 50), pageLength = 30))
+        }else if (input$`pred_Escala` == "semana"){
+          DT::datatable(get_freq_com_semana(c, nombre=nombreC,fechai=fecha,fechaf = fecha2), options = list(lengthMenu = c(5, 30, 50), pageLength = 30))
+        }else{
+          DT::datatable(get_freq_com_mes(c, nombre=nombreC,fechai=fecha,fechaf = fecha2), options = list(lengthMenu = c(5, 30, 50), pageLength = 30))
+        }
+      })
+      
+      shinyjs::show("prediccionTableC")
+      shinyjs::hide("prediccionTableB")
+    }
+  })
+  
+  observeEvent(input$`pred_BuscarBarrios`, {
+    if(is.na(input$`pred_Fecha`[1]) || is.na(input$`pred_Fecha`[2])){
+      showElement("pred_MsgError1")
+      hideElement("pred_MsgError2")
+    }else if(input$`pred_Fecha`[1] > input$`pred_Fecha`[2]){
+      showElement("pred_MsgError2")
+      hideElement("pred_MsgError1")
+    }else{
+      hideElement("pred_MsgError1")
+      hideElement("pred_MsgError2")
+      showElement("resultadosPrediccion")
+      
+      fecha <- ymd(input$`pred_Fecha`[1])
+      fecha2 <- ymd(input$`pred_Fecha`[2])
+      nombreB <- input$`pred_Barrio`
+      
+      output$resultadoPred <- renderText({
+        paste("Resultados para el barrio ", nombreB, "en el rango de fechas", fecha, " y ",
+              fecha2)})
+      
+      output$prediccionTableB <- DT::renderDataTable({
+        DT::datatable( b, options = list(lengthMenu = c(5, 30, 50), pageLength = 30))
+      })
+      
+      output$prediccionTableB <- DT::renderDataTable({
+        if (input$`pred_Escala` == "dia"){
+          DT::datatable(get_freq_bar_dia(b, nombre=nombreB,fechai=fecha,fechaf = fecha2), options = list(lengthMenu = c(5, 30, 50), pageLength = 30))
+        }else if (input$`pred_Escala` == "semana"){
+          DT::datatable(get_freq_bar_semana(b, nombre=nombreB,fechai=fecha,fechaf = fecha2), options = list(lengthMenu = c(5, 30, 50), pageLength = 30))
+        }else{
+          DT::datatable(get_freq_bar_mes(b, nombre=nombreB,fechai=fecha,fechaf = fecha2), options = list(lengthMenu = c(5, 30, 50), pageLength = 30))
+        }
+      })
+      
+      shinyjs::hide("prediccionTableC")
+      shinyjs::show("prediccionTableB")
+    }
+  })
+  
+  observeEvent(input$`pred_Fecha`,{
+    if(is.na(input$`pred_Fecha`[1]) || is.na(input$`pred_Fecha`[2])){
+      showElement("pred_MsgError1")
+      hideElement("pred_MsgError2")
+    }else if(input$`pred_Fecha`[1] > input$`pred_Fecha`[2]){
+      showElement("pred_MsgError2")
+      hideElement("pred_MsgError1")
+    }else{
+      hideElement("pred_MsgError1")
+      hideElement("pred_MsgError2")
+      showElement("resultadosTitulo")}
+    
+    #hideElement("resultadosTitulo")
+  })
 }
 
