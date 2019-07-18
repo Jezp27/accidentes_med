@@ -9,14 +9,19 @@ subseting_fecha<-function(data,fechai=mdy('1/01/2000'),fechaf=mdy('12/31/2020'))
 
 pred_barrios<-function(barrio="",fechai=mdy('1/01/2000'),fechaf=mdy('12/31/2020')){
   a<-subseting_fecha(Fechas,fechai,fechaf)
-  daysb<-array()
-  monthsb<-array()
-  yearsb<-array()
-  yearsb<-year(mdy(a$FECHA))
-  monthsb<-month(mdy(a$FECHA))
-  daysb<-day(mdy(a$FECHA))
+  DIA<-array()
+  MES<-array()
+  ANIO<-array()
+  NOMBRE_DIA<-array()
+  SEMANA<-array()
+  SEMANA<-strftime(mdy(a$FECHA),format = "%V")
+  NOMBRE_DIA<-wday(mdy(a$FECHA))
+  ANIO<-year(mdy(a$FECHA))
+  MES<-month(mdy(a$FECHA))
+  DIA<-day(mdy(a$FECHA))
   a<-a[-1]
-  a<-cbind(a,yearsb,monthsb,daysb)
+  a<-cbind(a,ANIO,MES,DIA,NOMBRE_DIA,SEMANA)
+  a<-a[-6]
   return(a)
 }
 
