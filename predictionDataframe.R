@@ -1,5 +1,8 @@
 Fechas<-read.csv("fest_etiq.csv")
 library(lubridate)
+library(randomForest)
+#la sgte linea no es necesaria si se carga desde el inicio de la app el archivo
+rf<-get(load("modelosRandomForestBarrio2018.RData"))
 
 subseting_fecha<-function(data,fechai=mdy('1/01/2000'),fechaf=mdy('12/31/2020')){
   a<-subset(data,(mdy(data$FECHA))>=fechai)
@@ -19,13 +22,19 @@ pred_barrios<-function(barrio="",fechai=mdy('1/01/2000'),fechaf=mdy('12/31/2020'
   ANIO<-year(mdy(a$FECHA))
   MES<-month(mdy(a$FECHA))
   DIA<-day(mdy(a$FECHA))
+  Fecha<-a[1]
   a<-a[-1]
   a<-cbind(a,ANIO,MES,DIA,NOMBRE_DIA,SEMANA)
+  a<-transform.data.frame(a, SEMANA = as.numeric(SEMANA))
   a<-a[-6]
-  return(a)
+  #obteniendo el modelo del barrio ingresado
+  modelo<-rf[[barrio]]
+  #realizando la predicción
+  Accidentes_Predichos<-predict(modelo,a)
+  Fecha<-cbind(Fecha,a$NOMBRE_DIA,Accidentes_Predichos)
+  names(Fecha)<-c("FECHA","DIA","ACCIDENTES PREDICHOS")
+  return(Fecha)
 }
 
-atest1<-pred_barrios("",mdy('1/01/2018'),mdy('2/01/2018'))
-
-
-a<-subseting_fecha(Fechas,mdy('1/01/2018'),mdy('3/01/2018'))
+#test 
+w<-pred_barrios("Altamira",mdy("1/01/2018"),mdy("1/29/2018"))
