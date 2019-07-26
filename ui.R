@@ -25,7 +25,7 @@ shinyUI(
           column( width=12,
                   tags$div(class="logoWrapper",
                            align= "center",
-                           HTML('<img src="inicio.png" alt="inicio">')
+                           HTML('<img src="inicio1.png" alt="Bienvenida">')
                   )
           )),
         sidebarLayout(
@@ -35,6 +35,24 @@ shinyUI(
           mainPanel(
                           
           )
+        )
+      ),
+      tabPanel(
+        "Guia de Uso",
+        column(width=12, align = "center",
+               tags$br(),
+               tags$h1(
+                 "Acerca de la aplicacion:"
+               ),
+               tags$br(),
+               tags$br(),
+               tags$div(
+                 HTML(
+                   '<iframe width= "1000" height="755" src="https://www.youtube.com/embed/0qHGEgFucQU" frameborder="0" 
+                   allow="accelerometer; autoplay; encrypted-media" 
+                   allowfullscreen></iframe>'
+                 )
+               )
         )
       ),
       tabPanel(
@@ -222,7 +240,6 @@ shinyUI(
                                             choiceNames = list("Dia", "Semana", "Mes"),
                                             choiceValues =  list("dia", "semana", "mes"))
                                ),
-                               tags$br(),
                                tags$br(),
                                tags$br()
                               )
