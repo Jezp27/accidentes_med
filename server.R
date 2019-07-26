@@ -8,6 +8,7 @@ library(shinyjs)
 library(lubridate)
 library(colorspace)
 library(DT)
+library(randomForest)
 
 
 function(input, output) {
@@ -15,7 +16,7 @@ function(input, output) {
   output$titulo <- renderText("Mapa de la ciudad de Medellin segmentado por comunas")
   
   output$error1 <- renderText("Por favor ingrese el rango de fechas completo")
-  output$error2 <- renderText("El rango de fechas ingresado es inválido, por favor verifíquelo")
+  output$error2 <- renderText("El rango de fechas ingresado es invÃ¡lido, por favor verifÃ­quelo")
 
   output$myMap <- renderLeaflet({
     output$descriptionTableC <- NULL
@@ -174,7 +175,7 @@ function(input, output) {
     #se agregan lo poligonos de las comunas
     m=addPolygons(m,fillOpacity =0.5,color =color, opacity = 1, 
                   #con UTF e ISO... se pegan los nombres de manera correcta
-                  #summa para mostrar número de accidentes en ese período de tiempo
+                  #summa para mostrar nÃºmero de accidentes en ese perÃ­odo de tiempo
                   popup = paste(comunass$NOMBRE,summa))
     m=addTiles(m,options = tileOptions(minZoom=11, maxZoom=14))
     #Se agrega la marca de la escala del mapa, opcional
@@ -212,7 +213,7 @@ function(input, output) {
   }
   
 ################################################################################################
-  ###Devuelve el dataframe a mostrar en la pag de un barrio por días
+  ###Devuelve el dataframe a mostrar en la pag de un barrio por dÃ­as
   get_freq_bar_dia<-function(data,nombre="",fechai=mdy("1/1/2012"),fechaf=mdy("1/1/2020")){
     bardata<-subset(data,data$BARRIO==nombre)
     inter<-interval(fechai,fechaf)
@@ -247,7 +248,7 @@ function(input, output) {
   }
 ################################################################################################ 
   
-  ###Devuelve el dataframe a mostrar en la pag de una comuna por días
+  ###Devuelve el dataframe a mostrar en la pag de una comuna por dÃ­as
   get_freq_com_dia<-function(data,nombre="",fechai=mdy("1/1/2012"),fechaf=mdy("1/1/2020")){
     comdata<-subset(data,data$COMUNA==nombre)
     inter<-interval(fechai,fechaf)
@@ -278,10 +279,71 @@ function(input, output) {
     names(pormes)[3]<-"NUMERO DE ACCIDENTES"
     return(pormes)
   }
+#-----------------------------nueva funcion prediccion ------------------------------------------
+  subseting_fecha<-function(data,fechai=mdy('1/01/2012'),fechaf=mdy('12/31/2020')){
+    fechainicial<-mdy(fechai)
+    fechafinal<-mdy(fechaf)
+    a<-subset(data,(mdy(data$FECHA))>=fechai)
+    a<-subset(a,(mdy(a$FECHA))<=fechaf)
+    return(a)
+  }
+  
+  pred_barrios<-function(barrio="",fechai=mdy('1/01/2000'),fechaf=mdy('12/31/2020')){
+    a<-subseting_fecha(FechasPrediccion,fechai,fechaf)
+    DIA<-array()
+    MES<-array()
+    ANIO<-array()
+    NOMBRE_DIA<-array()
+    SEMANA<-array()
+    SEMANA<-strftime(mdy(a$FECHA),format = "%V")
+    NOMBRE_DIA<-wday(mdy(a$FECHA))
+    ANIO<-year(mdy(a$FECHA))
+    MES<-month(mdy(a$FECHA))
+    DIA<-day(mdy(a$FECHA))
+    Fecha<-a[1]
+    a<-a[-1]
+    a<-cbind(a,ANIO,MES,DIA,NOMBRE_DIA,SEMANA)
+    a<-transform.data.frame(a, SEMANA = as.numeric(SEMANA))
+    a<-a[-6]
+    #obteniendo el modelo del barrio ingresado
+    modelo<-randomForestBarrios[[barrio]]
+    #realizando la predicción
+    Accidentes_Predichos<-predict(modelo,a)
+    Fecha<-cbind(Fecha,a$NOMBRE_DIA,Accidentes_Predichos)
+    names(Fecha)<-c("FECHA","DIA","ACCIDENTES PREDICHOS")
+    return(Fecha)
+  }
+  
+  pred_comunas<-function(comuna="",fechai=mdy('1/01/2000'),fechaf=mdy('12/31/2020')){
+    a<-subseting_fecha(FechasPrediccion,fechai,fechaf)
+    DIA<-array()
+    MES<-array()
+    ANIO<-array()
+    NOMBRE_DIA<-array()
+    SEMANA<-array()
+    SEMANA<-strftime(mdy(a$FECHA),format = "%V")
+    NOMBRE_DIA<-wday(mdy(a$FECHA))
+    ANIO<-year(mdy(a$FECHA))
+    MES<-month(mdy(a$FECHA))
+    DIA<-day(mdy(a$FECHA))
+    Fecha<-a[1]
+    a<-a[-1]
+    a<-cbind(a,ANIO,MES,DIA,NOMBRE_DIA,SEMANA)
+    a<-transform.data.frame(a, SEMANA = as.numeric(SEMANA))
+    a<-a[-6]
+    #obteniendo el modelo del barrio ingresado
+    modelo<-randomForestComunas[[comuna]]  
+    #realizando la predicción
+    Accidentes_Predichos<-predict(modelo,a)
+    Fecha<-cbind(Fecha,a$NOMBRE_DIA,Accidentes_Predichos)
+    names(Fecha)<-c("FECHA","DIA","ACCIDENTES PREDICHOS")
+    return(Fecha)
+  }
+  
   
 ################################## # PREDICCION # ###############################################
   output$pred_Error1 <- renderText("Por favor ingrese el rango de fechas completo")
-  output$pred_Error2 <- renderText("El rango de fechas ingresado es inválido, por favor verifíquelo")
+  output$pred_Error2 <- renderText("El rango de fechas ingresado es invÃ¡lido, por favor verifÃ­quelo")
   output$prediccionTableC <- NULL
   output$prediccionTableB <- NULL 
   
@@ -325,7 +387,7 @@ function(input, output) {
       
       output$prediccionTableC <- DT::renderDataTable({
         if (input$`pred_Escala` == "dia"){
-          DT::datatable(get_freq_com_dia(c, nombre=nombreC,fechai=fecha,fechaf = fecha2), options = list(lengthMenu = c(5, 30, 50), pageLength = 30))
+          DT::datatable(pred_comunas(comuna=nombreC,fechai=fecha,fechaf = fecha2), options = list(lengthMenu = c(5, 30, 50), pageLength = 30))
         }else if (input$`pred_Escala` == "semana"){
           DT::datatable(get_freq_com_semana(c, nombre=nombreC,fechai=fecha,fechaf = fecha2), options = list(lengthMenu = c(5, 30, 50), pageLength = 30))
         }else{
@@ -364,7 +426,7 @@ function(input, output) {
       
       output$prediccionTableB <- DT::renderDataTable({
         if (input$`pred_Escala` == "dia"){
-          DT::datatable(get_freq_bar_dia(b, nombre=nombreB,fechai=fecha,fechaf = fecha2), options = list(lengthMenu = c(5, 30, 50), pageLength = 30))
+          DT::datatable(pred_barrios(barrio=nombreB,fechai=fecha,fechaf = fecha2), options = list(lengthMenu = c(5, 30, 50), pageLength = 30))
         }else if (input$`pred_Escala` == "semana"){
           DT::datatable(get_freq_bar_semana(b, nombre=nombreB,fechai=fecha,fechaf = fecha2), options = list(lengthMenu = c(5, 30, 50), pageLength = 30))
         }else{

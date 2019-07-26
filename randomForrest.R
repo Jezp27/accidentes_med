@@ -1,20 +1,20 @@
 library(lubridate)
 library(randomForest)
-databaseBarrios<-read.csv(file = "Fbarrios1.csv", sep = ",")
-Barrios<-unique(databaseBarrios$BARRIO)
+databaseComunas<-read.csv(file = "Fcomunas1.csv", sep = ",")
+Comunas<-unique(databaseComunas$COMUNA)
 
 DIA<-array()
-DIA<-day(mdy(databaseBarrios$FECHA))
-databaseBarrios<-cbind.data.frame(databaseBarrios,DIA)
-databaseBarrios<-databaseBarrios[,c('X','FECHA','NOMBRE_DIA','FESTIVO','DIA','SEMANA','MES','ANIO','BARRIO','Freq')]
+DIA<-day(mdy(databaseComunas$FECHA))
+databaseComunas<-cbind.data.frame(databaseComunas,DIA)
+databaseComunas<-databaseComunas[,c('X','FECHA','NOMBRE_DIA','FESTIVO','DIA','SEMANA','MES','ANIO','COMUNA','Freq')]
 
 
-modelosRandomForestComuna<-list()
-mseRandomForestComuna<-array()
+modelosRandomForestComuna2018<-list()
+mseRandomForestComuna2018<-array()
 
-for (barrio in Barrios){
+for (comuna in Comunas){
   #Para el barrio SELECCIONADO
-  aux<-subset.data.frame(databaseBarrios,databaseBarrios$BARRIO=="Aranjuez")
+  aux<-subset.data.frame(databaseComunas,databaseComunas$COMUNA==comuna)
   #organizando el dataframe por las fechas
   aux<-aux[order(as.Date(aux$FECHA, format="%m/%d/%Y")),]
   #dejando solo las etiquetas necesarias ( se eliminan X, comuna)
@@ -34,13 +34,16 @@ for (barrio in Barrios){
   mse=(sum((aux_test_2018$residual^2)))/nrow(aux_test_2018)
   mean(mBasico$mse)
   #guardando el modelo del barrio
-  modelosRandomForestComuna[[barrio]]<-mBasico
-  mseRandomForestComuna[barrio]<-mse
+  modelosRandomForestComuna2018[[comuna]]<-mBasico
+  mseRandomForestComuna2018[comuna]<-mse
   
 }
-summary(mseRandomForestComuna)
-save(modelosRandomForestComuna,file = "modelosRandomForestComuna2018.RData")
-rm(modelosRandomForestComuna)
+
+summary(mseRandomForestComuna2018)
+mseRandomForestComuna2018
+save(modelosRandomForestComuna2018,file = "modelosRandomForestComuna2018.RData")
+save(mseRandomForestComuna2018,file = "mseRandomForestComuna2018.RData")
+#rm(modelosRandomForestComuna)
 #importando archivos RData
 modelosRandomForestComuna<-get(load("modelosRandomForestComuna2018.RData"))
-modelosRandomForestComuna<-as.data.frame(modelosRandomForestComuna)
+

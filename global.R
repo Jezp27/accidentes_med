@@ -25,6 +25,10 @@ comunasOGR=readOGR("./Data/Comunas/Limite_Comuna_Corregimiento.shp")
 
 b<-read.csv("Fbarrios1.csv")
 c<-read.csv("./Fcomunas1.csv")
+#imports necesarios para prediccion
+FechasPrediccion<-read.csv("fest_etiq.csv")
+randomForestBarrios<-get(load("modelosRandomForestBarrio2018.RData"))
+randomForestComunas<-get(load("modelosRandomForestBarrio2018.RData"))
 
 nb<-as.data.frame(table(b$BARRIO))
 nc<-as.data.frame(table(c$COMUNA))
