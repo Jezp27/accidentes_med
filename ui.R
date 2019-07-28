@@ -48,7 +48,7 @@ shinyUI(
                tags$br(),
                tags$div(
                  HTML(
-                   '<iframe width= "1000" height="755" src="https://www.youtube.com/embed/0qHGEgFucQU" frameborder="0" 
+                   '<iframe width= "1000" height="755" src="https://www.youtube.com/embed/o_H_OkXeglk" frameborder="0" 
                    allow="accelerometer; autoplay; encrypted-media" 
                    allowfullscreen></iframe>'
                  )
@@ -125,7 +125,7 @@ shinyUI(
                                    "Seleccione la escala de tiempo que desea usar para visualizar los resultados",
                                    align = "center"),
                           radioButtons('_escala', '',
-                              choiceNames = list("DÃ­a", "Semana", "Mes"),
+                              choiceNames = list("Dia", "Semana", "Mes"),
                               choiceValues =  list("dia", "semana", "mes")))
                         
               )
@@ -156,9 +156,19 @@ shinyUI(
                           ),
                           tags$br(),
                           withSpinner(DT::dataTableOutput("descriptionTableC"), color = "#15a3c6"),
-                          withSpinner(DT::dataTableOutput("descriptionTableB"), color = "#15a3c6")
+                          withSpinner(DT::dataTableOutput("descriptionTableB"), color = "#15a3c6"),
+                          tags$br()
                         )
               )
+            ),
+            fluidRow(
+              hidden(tags$div(
+                id = "serieT",  
+                tags$h3(textOutput("serie"), 
+                        align = "center")
+              )),
+              withSpinner(dygraphOutput("serieTh"), color = "#15a3c6")
+              
             )
          )
       ),
@@ -201,7 +211,7 @@ shinyUI(
                                tags$br(),
                                tags$br(),
                                tags$br(),
-                               dateRangeInput('pred_Fecha' , 'Fecha:', min = '2014-01-01',max = '2018-12-31', startview= "decade",
+                               dateRangeInput('pred_Fecha' , 'Fecha:', min = '2014-01-01',max = '2019-07-26', startview= "decade",
                                               language = "es", separator = " - ", format = "mm/dd/yyyy"),
                                tags$br(),
                                tags$br(),

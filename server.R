@@ -9,18 +9,21 @@ library(lubridate)
 library(colorspace)
 library(DT)
 library(randomForest)
-
+library(xts)
+library(dygraphs)
+library(tidyverse)
 
 function(input, output) {
 
   output$titulo <- renderText("Mapa de la ciudad de Medellin segmentado por comunas")
-  
+  output$serie <- renderText("Serie de Tiempo")
   output$error1 <- renderText("Por favor ingrese el rango de fechas completo")
-  output$error2 <- renderText("El rango de fechas ingresado es invÃ¡lido, por favor verifÃ­quelo")
+  output$error2 <- renderText("El rango de fechas ingresado es invalido, por favor verifiquelo")
 
   output$myMap <- renderLeaflet({
     output$descriptionTableC <- NULL
     output$descriptionTableB <- NULL
+    output$serieTh <- NULL
     fecha<-mdy("1/1/2014")
     fecha2<-mdy("1/1/2015")
     
@@ -72,16 +75,34 @@ function(input, output) {
       
       output$descriptionTableC <- DT::renderDataTable({
        if (input$`_escala` == "dia"){
-          DT::datatable(get_freq_com_dia(c, nombre=nombreC,fechai=fecha,fechaf = fecha2), options = list(lengthMenu = c(5, 30, 50), pageLength = 30))
+          dataF <- get_freq_com_dia(c, nombre=nombreC,fechai=fecha,fechaf = fecha2)
+          DT::datatable(dataF, options = list(lengthMenu = c(5, 30, 50), pageLength = 30))
         }else if (input$`_escala` == "semana"){
-          DT::datatable(get_freq_com_semana(c, nombre=nombreC,fechai=fecha,fechaf = fecha2), options = list(lengthMenu = c(5, 30, 50), pageLength = 30))
+          dataF <- get_freq_com_semana(c, nombre=nombreC,fechai=fecha,fechaf = fecha2)
+          DT::datatable(dataF, options = list(lengthMenu = c(5, 30, 50), pageLength = 30))
         }else{
-          DT::datatable(get_freq_com_mes(c, nombre=nombreC,fechai=fecha,fechaf = fecha2), options = list(lengthMenu = c(5, 30, 50), pageLength = 30))
+          dataF <- get_freq_com_mes(c, nombre=nombreC,fechai=fecha,fechaf = fecha2)
+          DT::datatable(dataF, options = list(lengthMenu = c(5, 30, 50), pageLength = 30))
         }
       })
       
+      if (input$`_escala` == "dia"){
+        dataF <- get_freq_com_dia(c, nombre=nombreC,fechai=fecha,fechaf = fecha2)
+        showElement("serieT")
+        serie_tiempo(dataF)
+      }else if (input$`_escala` == "semana"){
+        dataF <- get_freq_com_semana(c, nombre=nombreC,fechai=fecha,fechaf = fecha2)
+        showElement("serieT")
+        serie_tiempo(dataF)
+      }else{
+        dataF <- get_freq_com_mes(c, nombre=nombreC,fechai=fecha,fechaf = fecha2)
+        showElement("serieT")
+        serie_tiempo(dataF)
+      }
+      
       shinyjs::show("descriptionTableC")
       shinyjs::hide("descriptionTableB")
+      
     }
   })
 
@@ -117,16 +138,34 @@ function(input, output) {
       
       output$descriptionTableB <- DT::renderDataTable({
         if (input$`_escala` == "dia"){
-          DT::datatable(get_freq_bar_dia(b, nombre=nombreB,fechai=fecha,fechaf = fecha2), options = list(lengthMenu = c(5, 30, 50), pageLength = 30))
+          dataF <- get_freq_bar_dia(b, nombre=nombreB,fechai=fecha,fechaf = fecha2)
+          DT::datatable(dataF, options = list(lengthMenu = c(5, 30, 50), pageLength = 30))
         }else if (input$`_escala` == "semana"){
-          DT::datatable(get_freq_bar_semana(b, nombre=nombreB,fechai=fecha,fechaf = fecha2), options = list(lengthMenu = c(5, 30, 50), pageLength = 30))
+          dataF <- get_freq_bar_semana(b, nombre=nombreB,fechai=fecha,fechaf = fecha2)
+          DT::datatable(dataF, options = list(lengthMenu = c(5, 30, 50), pageLength = 30))
         }else{
-          DT::datatable(get_freq_bar_mes(b, nombre=nombreB,fechai=fecha,fechaf = fecha2), options = list(lengthMenu = c(5, 30, 50), pageLength = 30))
+          dataF <-get_freq_bar_mes(b, nombre=nombreB,fechai=fecha,fechaf = fecha2)
+          DT::datatable(dataF, options = list(lengthMenu = c(5, 30, 50), pageLength = 30))
         }
       })
+      
+      if (input$`_escala` == "dia"){
+        dataF <- get_freq_bar_dia(b, nombre=nombreB,fechai=fecha,fechaf = fecha2)
+        showElement("serieT")
+        serie_tiempo(dataF)
+      }else if (input$`_escala` == "semana"){
+        dataF <- get_freq_bar_semana(b, nombre=nombreB,fechai=fecha,fechaf = fecha2)
+        showElement("serieT")
+        serie_tiempo(dataF)
+      }else{
+        dataF <-get_freq_bar_mes(b, nombre=nombreB,fechai=fecha,fechaf = fecha2)
+        showElement("serieT")
+        serie_tiempo(dataF)
+      }
   
       shinyjs::hide("descriptionTableC")
       shinyjs::show("descriptionTableB")
+      
     }
   })
   
@@ -175,7 +214,7 @@ function(input, output) {
     #se agregan lo poligonos de las comunas
     m=addPolygons(m,fillOpacity =0.5,color =color, opacity = 1, 
                   #con UTF e ISO... se pegan los nombres de manera correcta
-                  #summa para mostrar nÃºmero de accidentes en ese perÃ­odo de tiempo
+                  #summa para mostrar numero de accidentes en ese periodo de tiempo
                   popup = paste(comunass$NOMBRE,summa))
     m=addTiles(m,options = tileOptions(minZoom=11, maxZoom=14))
     #Se agrega la marca de la escala del mapa, opcional
@@ -213,7 +252,7 @@ function(input, output) {
   }
   
 ################################################################################################
-  ###Devuelve el dataframe a mostrar en la pag de un barrio por dÃ­as
+  ###Devuelve el dataframe a mostrar en la pag de un barrio por dias
   get_freq_bar_dia<-function(data,nombre="",fechai=mdy("1/1/2012"),fechaf=mdy("1/1/2020")){
     bardata<-subset(data,data$BARRIO==nombre)
     inter<-interval(fechai,fechaf)
@@ -247,8 +286,23 @@ function(input, output) {
     return(pormes)
   }
 ################################################################################################ 
+  ###Serie de tiempo
+  serie_tiempo<-function(data){
+    output$serieTh <- renderDygraph({
+      data<-transform.data.frame(data, FECHA = parse_date_time(FECHA,orders="mdy"))
+      #print(data)
+      if(is.null(data$NUMERO.DE.ACCIDENTES) || is.null(data$FECHA)) return(NULL)
+      don<-xts(x = data$NUMERO.DE.ACCIDENTES ,order.by=data$FECHA)
+      dygraph(don) %>%
+        dyOptions(labelsUTC = TRUE, fillGraph=TRUE, fillAlpha=0.1, drawGrid = FALSE, colors="#D8AE5A") %>%
+        dyRangeSelector() %>%
+        dyCrosshair(direction = "vertical") %>%
+        dyHighlight(highlightCircleSize = 5, highlightSeriesBackgroundAlpha = 0.2, hideOnMouseOut = FALSE)  %>%
+        dyRoller(rollPeriod = 1)
+    })
+  }
   
-  ###Devuelve el dataframe a mostrar en la pag de una comuna por dÃ­as
+  ###Devuelve el dataframe a mostrar en la pag de una comuna por dias
   get_freq_com_dia<-function(data,nombre="",fechai=mdy("1/1/2012"),fechaf=mdy("1/1/2020")){
     comdata<-subset(data,data$COMUNA==nombre)
     inter<-interval(fechai,fechaf)
@@ -257,6 +311,7 @@ function(input, output) {
     comdata<-comdata[ , !names(comdata) %in% nocolumnas]
     names(comdata)[2]<-"DIA"
     names(comdata)[3]<-"NUMERO DE ACCIDENTES"
+    #print(comdata)
     return(comdata)
   }
   
@@ -343,7 +398,7 @@ function(input, output) {
   
 ################################## # PREDICCION # ###############################################
   output$pred_Error1 <- renderText("Por favor ingrese el rango de fechas completo")
-  output$pred_Error2 <- renderText("El rango de fechas ingresado es invÃ¡lido, por favor verifÃ­quelo")
+  output$pred_Error2 <- renderText("El rango de fechas ingresado es invalido, por favor verifiquelo")
   output$prediccionTableC <- NULL
   output$prediccionTableB <- NULL 
   
